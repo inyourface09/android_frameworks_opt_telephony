@@ -2398,31 +2398,31 @@ public class DcTracker extends DcTrackerBase {
         mAllApnSettings = new ArrayList<ApnSetting>();
         String operator = getOperatorNumeric();
         if (operator != null && !operator.isEmpty()) {
-            String selection = "numeric = '" + operator + "'";
-            String orderBy = "_id";
-            // query only enabled apn.
-            // carrier_enabled : 1 means enabled apn, 0 disabled apn.
-            // selection += " and carrier_enabled = 1";
-            if (DBG) log("createAllApnList: selection=" + selection);
+            if (isDummyProfileNeeded()) {
+                addDummyApnSettings(operator);
+            } else {
+                String selection = "numeric = '" + operator + "'";
+                String orderBy = "_id";
+                // query only enabled apn.
+                // carrier_enabled : 1 means enabled apn, 0 disabled apn.
+                // selection += " and carrier_enabled = 1";
+                if (DBG) log("createAllApnList: selection=" + selection);
 
-            Cursor cursor = mPhone.getContext().getContentResolver().query(
-                    Telephony.Carriers.CONTENT_URI, null, selection, null, orderBy);
+                Cursor cursor = mPhone.getContext().getContentResolver().query(
+                        Telephony.Carriers.CONTENT_URI, null, selection, null, orderBy);
 
-            if (cursor != null) {
-                if (cursor.getCount() > 0) {
-                    mAllApnSettings = createApnList(cursor);
+                if (cursor != null) {
+                    if (cursor.getCount() > 0) {
+                        mAllApnSettings = createApnList(cursor);
+                    }
+                    cursor.close();
                 }
-                cursor.close();
             }
         }
 
         addEmergencyApnSetting();
 
         dedupeApnSettings();
-
-        if (mAllApnSettings.isEmpty() && isDummyProfileNeeded()) {
-            addDummyApnSettings(operator);
-        }
 
         if (mAllApnSettings.isEmpty()) {
             if (DBG) log("createAllApnList: No APN found for carrier: " + operator);
